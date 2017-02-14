@@ -443,26 +443,26 @@ type UniversalSecondFactor struct {
 }
 
 type OpenIDConnect struct {
-	Name         string               `yaml:"name"`
-	RedirectURL  string               `yaml:"redirect_url"`
-	ClientID     string               `yaml:"client_id"`
-	ClientSecret string               `yaml:"client_secret"`
-	IssuerURL    string               `yaml:"issuer_url"`
-	Display      string               `yaml:"display"`
-	Scope        []string             `yaml:"scope"`
-	Permissions  ConnectorPermissions `yaml:"permissions"`
+	Name         string                 `yaml:"name"`
+	RedirectURL  string                 `yaml:"redirect_url"`
+	ClientID     string                 `yaml:"client_id"`
+	ClientSecret string                 `yaml:"client_secret"`
+	IssuerURL    string                 `yaml:"issuer_url"`
+	Display      string                 `yaml:"display"`
+	Scope        []string               `yaml:"scope"`
+	Permissions  []ConnectorPermissions `yaml:"permissions"`
 }
 
 type LightweightDirectoryAccessProtocol struct {
-	Name        string               `yaml:"name"`
-	Scope       []string             `yaml:"scope"`
-	Permissions ConnectorPermissions `yaml:"permissions"`
+	Name        string                 `yaml:"name"`
+	Scope       []string               `yaml:"scope"`
+	Permissions []ConnectorPermissions `yaml:"permissions"`
 }
 
 type ConnectorPermissions struct {
-	Claim []string `yaml:"claim"`
+	Claim string   `yaml:"claim"`
 	Value string   `yaml:"value"`
-	Role  []string `yaml:"roles"`
+	Roles []string `yaml:"roles"`
 }
 
 // SSH is 'ssh_service' section of the config file

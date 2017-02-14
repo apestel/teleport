@@ -37,9 +37,150 @@ func (s *FileTestSuite) TearDownSuite(c *check.C) {
 func (s *FileTestSuite) SetUpTest(c *check.C) {
 }
 
+func (s *FileTestSuite) TestAuthenticationSection(c *check.C) {
+	tests := []struct {
+		inConfigString          string
+		outAuthenticationConfig AuthenticationConfig
+	}{
+		// 0 - local with otp
+		{
+			`auth_service:
+                authentication:
+                  type: local
+                  second_factor: otp`,
+			AuthenticationConfig{
+				Type:         "local",
+				SecondFactor: "otp",
+			},
+		},
+		// 1 - local auth without otp
+		{
+			`auth_service:
+                authentication:
+                    type: local
+                    second_factor: off`,
+			AuthenticationConfig{
+				Type:         "local",
+				SecondFactor: "off",
+			},
+		},
+		// 2 - local auth with u2f
+		{
+			`auth_service:
+                authentication:
+                    type: local
+                    second_factor: u2f
+                    u2f:
+                        app_id: https://graviton:3080
+                        facets:
+                        - https://graviton:3080`,
+			AuthenticationConfig{
+				Type:         "local",
+				SecondFactor: "u2f",
+				U2F: UniversalSecondFactor{
+					AppID: "https://graviton:3080",
+					Facets: []string{
+						"https://graviton:3080",
+					},
+				},
+			},
+		},
+		// 3 - oidc without second factor
+		{
+			`auth_service:
+               authentication:
+                 type: oidc
+                 oidc:
+                   name: google
+                   redirect_url: "https://localhost:3080/v1/webapi/oidc/callback"
+                   client_id: id-from-google.apps.googleusercontent.com
+                   client_secret: secret-key-from-google
+                   issuer_url: "https://accounts.google.com"
+                   display: whaterver
+                   scope: [ "ssh_permissions", "roles"]
+                   permissions:
+                     - claim: role
+                       value: admin
+                       roles: ["dba", "backup", "root"]`,
+			AuthenticationConfig{
+				Type: "oidc",
+				OIDC: OpenIDConnect{
+					Name:         "google",
+					RedirectURL:  "https://localhost:3080/v1/webapi/oidc/callback",
+					ClientID:     "id-from-google.apps.googleusercontent.com",
+					ClientSecret: "secret-key-from-google",
+					IssuerURL:    "https://accounts.google.com",
+					Display:      "whaterver",
+					Scope: []string{
+						"ssh_permissions",
+						"roles",
+					},
+					Permissions: []ConnectorPermissions{
+						ConnectorPermissions{
+							Claim: "role",
+							Value: "admin",
+							Roles: []string{
+								"dba",
+								"backup",
+								"root",
+							},
+						},
+					},
+				},
+			},
+		},
+		// 4 - ldap with second factor
+		{
+			`auth_service:
+              authentication:
+                type: ldap
+                second_factor: otp
+                ldap:
+                  name: <ldap-name>
+                  scope: [ "ssh_permissions", "roles" ]
+                  permissions:
+                    - claim: role
+                      value: admin
+                      roles: [ "dba", "backup", "root" ]`,
+			AuthenticationConfig{
+				Type:         "ldap",
+				SecondFactor: "otp",
+				LDAP: LightweightDirectoryAccessProtocol{
+					Name: "<ldap-name>",
+					Scope: []string{
+						"ssh_permissions",
+						"roles",
+					},
+					Permissions: []ConnectorPermissions{
+						ConnectorPermissions{
+							Claim: "role",
+							Value: "admin",
+							Roles: []string{
+								"dba",
+								"backup",
+								"root",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	// run tests
+	for _, tt := range tests {
+		encodedConfigString := base64.StdEncoding.EncodeToString([]byte(tt.inConfigString))
+
+		fc, err := ReadFromString(encodedConfigString)
+		c.Assert(err, check.IsNil)
+
+		c.Assert(fc.Auth.Authentication, check.DeepEquals, tt.outAuthenticationConfig)
+	}
+}
+
 // TestLegacySection ensures we continue to parse and correctly load deprecated
 // OIDC connector and U2F authentication configuration.
-func (s *FileTestSuite) TestLegacySection(c *check.C) {
+func (s *FileTestSuite) TestLegacyAuthenticationSection(c *check.C) {
 	encodedLegacyAuthenticationSection := base64.StdEncoding.EncodeToString([]byte(LegacyAuthenticationSection))
 
 	// read config into struct
