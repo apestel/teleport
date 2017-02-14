@@ -1,5 +1,5 @@
 /*
-Copyright 2015-16 Gravitational, Inc.
+Copyright 2017 Gravitational, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -93,7 +93,7 @@ func ReadConfigFile(cliConfigPath string) (*FileConfig, error) {
 	return ReadFromFile(configFilePath)
 }
 
-// ApplyFileConfig applies confniguration from a YAML file to Teleport
+// ApplyFileConfig applies configuration from a YAML file to Teleport
 // runtime config
 func ApplyFileConfig(fc *FileConfig, cfg *service.Config) error {
 	// no config file? no problem

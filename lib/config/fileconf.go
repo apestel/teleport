@@ -1,5 +1,5 @@
 /*
-Copyright 2015-16 Gravitational, Inc.
+Copyright 2017 Gravitational, Inc.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -109,31 +109,31 @@ var (
 		"facets":             true,
 		// new keys
 		"authentication": true,
-		"type":           false,
-		"second_factor":  false,
-		"u2f":            true,
-		"app_id":         false,
-		"facets":         false,
-		"oidc":           true,
-		"name":           false,
-		"redirect_url":   false,
-		"client_id":      false,
-		"client_secret":  false,
-		"issuer_url":     false,
-		"display":        false,
-		"scope":          false,
-		"permissions":    true,
-		"claim":          false,
-		"value":          false,
-		"roles":          false,
-		"ldap":           true,
-		"name":           false,
-		"ldap_setting":   false,
-		"scope":          false,
-		"permissions":    true,
-		"claim":          false,
-		"value":          false,
-		"roles":          false,
+		//"type":           false,
+		"second_factor": false,
+		//"u2f":            true,
+		//"app_id":         false,
+		//"facets":         false,
+		"oidc": true,
+		//"name":           false,
+		//"redirect_url":   false,
+		//"client_id":      false,
+		//"client_secret":  false,
+		//"issuer_url":     false,
+		"display":     false,
+		"scope":       false,
+		"permissions": true,
+		"claim":       false,
+		"value":       false,
+		"roles":       false,
+		"ldap":        true,
+		//"name":           false,
+		"ldap_setting": false,
+		//"scope":        false,
+		//"permissions":  true,
+		//"claim":        false,
+		//"value":        false,
+		//"roles":        false,
 	}
 )
 
@@ -368,6 +368,7 @@ func (s *Service) Disabled() bool {
 // Auth is 'auth_service' section of the config file
 type Auth struct {
 	Service `yaml:",inline"`
+
 	// DomainName is the name of the CA who manages this cluster
 	DomainName string `yaml:"cluster_name,omitempty"`
 
@@ -384,9 +385,6 @@ type Auth struct {
 	// to 3rd party auth servers we trust)
 	ReverseTunnels []ReverseTunnel `yaml:"reverse_tunnels,omitempty"`
 
-	// OIDCConnectors is a list of trusted OpenID Connect Identity providers
-	OIDCConnectors []OIDCConnector `yaml:"oidc_connectors"`
-
 	// StaticTokens are pre-defined host provisioning tokens supplied via config file for
 	// environments where paranoid security is not needed
 	//
@@ -394,7 +392,16 @@ type Auth struct {
 	// for exmple: "auth,proxy,node:MTIzNGlvemRmOWE4MjNoaQo"
 	StaticTokens []StaticToken `yaml:"tokens,omitempty"`
 
+	// Authentication holds authentication configuration information like authentication
+	// type, second factor type, specific connector information, etc.
+	Authentication AuthenticationConfig `yaml:"authentication,omitempty"`
+
+	// OIDCConnectors is a list of trusted OpenID Connect Identity providers
+	// Deprecated: Use OIDC section in Authentication section instead.
+	OIDCConnectors []OIDCConnector `yaml:"oidc_connectors"`
+
 	// Configuration for "universal 2nd factor"
+	// Deprecated: Use U2F section in Authentication section instead.
 	U2F U2F `yaml:"u2f,omitempty"`
 }
 
@@ -410,6 +417,53 @@ type TrustedCluster struct {
 }
 
 type StaticToken string
+
+// Parse is applied to a string in "role,role,role:token" format. It breaks it
+// apart into a slice of roles, token and optional error
+func (t StaticToken) Parse() (roles teleport.Roles, token string, err error) {
+	parts := strings.Split(string(t), ":")
+	if len(parts) != 2 {
+		return nil, "", trace.Errorf("invalid static token spec: '%s'", t)
+	}
+	roles, err = teleport.ParseRoles(parts[0])
+	return roles, parts[1], trace.Wrap(err)
+}
+
+type AuthenticationConfig struct {
+	Type         string                             `yaml:"type"`
+	SecondFactor string                             `yaml:"second_factor,omitempty"`
+	U2F          UniversalSecondFactor              `yaml:"u2f,omitempty"`
+	OIDC         OpenIDConnect                      `yaml:"oidc,omitempty"`
+	LDAP         LightweightDirectoryAccessProtocol `yaml:"ldap,omitempty"`
+}
+
+type UniversalSecondFactor struct {
+	AppID  string   `yaml:"app_id"` // TODO(russjones): omitempty?
+	Facets []string `yaml:facets`   // TODO(russjones): omitempty?
+}
+
+type OpenIDConnect struct {
+	Name         string               `yaml:"name"`
+	RedirectURL  string               `yaml:"redirect_url"`
+	ClientID     string               `yaml:"client_id"`
+	ClientSecret string               `yaml:"client_secret"`
+	IssuerURL    string               `yaml:"issuer_url"`
+	Display      string               `yaml:"display"`
+	Scope        []string             `yaml:"scope"`
+	Permissions  ConnectorPermissions `yaml:"permissions"`
+}
+
+type LightweightDirectoryAccessProtocol struct {
+	Name        string               `yaml:"name"`
+	Scope       []string             `yaml:"scope"`
+	Permissions ConnectorPermissions `yaml:"permissions"`
+}
+
+type ConnectorPermissions struct {
+	Claim []string `yaml:"claim"`
+	Value string   `yaml:"value"`
+	Role  []string `yaml:"roles"`
+}
 
 // SSH is 'ssh_service' section of the config file
 type SSH struct {
@@ -622,17 +676,6 @@ func (o *OIDCConnector) Parse() (services.OIDCConnector, error) {
 		return nil, trace.Wrap(err)
 	}
 	return v2, nil
-}
-
-// Parse() is applied to a string in "role,role,role:token" format. It breaks it
-// apart into a slice of roles, token and optional error
-func (t StaticToken) Parse() (roles teleport.Roles, token string, err error) {
-	parts := strings.Split(string(t), ":")
-	if len(parts) != 2 {
-		return nil, "", trace.Errorf("invalid static token spec: '%s'", t)
-	}
-	roles, err = teleport.ParseRoles(parts[0])
-	return roles, parts[1], trace.Wrap(err)
 }
 
 type U2F struct {
