@@ -97,7 +97,6 @@ func (s *ConfigTestSuite) TestSampleConfig(c *check.C) {
 	c.Assert(fc.Limits.MaxUsers, check.Equals, defaults.LimiterMaxConcurrentUsers)
 	c.Assert(fc.Global.DataDir, check.Equals, defaults.DataDir)
 	c.Assert(fc.Logger.Severity, check.Equals, "INFO")
-
 }
 
 func (s *ConfigTestSuite) TestConfigReading(c *check.C) {
