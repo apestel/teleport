@@ -117,14 +117,6 @@ func NewAPIServer(config *APIConfig) http.Handler {
 	srv.GET("/:version/namespaces/:namespace/sessions/:id/stream", srv.withAuth(srv.getSessionChunk))
 	srv.GET("/:version/namespaces/:namespace/sessions/:id/events", srv.withAuth(srv.getSessionEvents))
 
-	// OIDC
-	srv.POST("/:version/oidc/connectors", srv.withAuth(srv.upsertOIDCConnector))
-	srv.GET("/:version/oidc/connectors", srv.withAuth(srv.getOIDCConnectors))
-	srv.GET("/:version/oidc/connectors/:id", srv.withAuth(srv.getOIDCConnector))
-	srv.DELETE("/:version/oidc/connectors/:id", srv.withAuth(srv.deleteOIDCConnector))
-	srv.POST("/:version/oidc/requests/create", srv.withAuth(srv.createOIDCAuthRequest))
-	srv.POST("/:version/oidc/requests/validate", srv.withAuth(srv.validateOIDCAuthCallback))
-
 	// Namespaces
 	srv.POST("/:version/namespaces", srv.withAuth(srv.upsertNamespace))
 	srv.GET("/:version/namespaces", srv.withAuth(srv.getNamespaces))
@@ -137,11 +129,23 @@ func NewAPIServer(config *APIConfig) http.Handler {
 	srv.GET("/:version/roles/:role", srv.withAuth(srv.getRole))
 	srv.DELETE("/:version/roles/:role", srv.withAuth(srv.deleteRole))
 
+	// OIDC
+	srv.POST("/:version/oidc/connectors", srv.withAuth(srv.upsertOIDCConnector))
+	srv.GET("/:version/oidc/connectors", srv.withAuth(srv.getOIDCConnectors))
+	srv.GET("/:version/oidc/connectors/:id", srv.withAuth(srv.getOIDCConnector))
+	srv.DELETE("/:version/oidc/connectors/:id", srv.withAuth(srv.deleteOIDCConnector))
+	srv.POST("/:version/oidc/requests/create", srv.withAuth(srv.createOIDCAuthRequest))
+	srv.POST("/:version/oidc/requests/validate", srv.withAuth(srv.validateOIDCAuthCallback))
+
 	// U2F
 	srv.GET("/:version/u2f/signuptokens/:token", srv.withAuth(srv.getSignupU2FRegisterRequest))
 	srv.POST("/:version/u2f/users", srv.withAuth(srv.createUserWithU2FToken))
 	srv.POST("/:version/u2f/users/:user/sign", srv.withAuth(srv.u2fSignRequest))
 	srv.GET("/:version/u2f/appid", srv.withAuth(srv.getU2FAppID))
+
+	// cluster authentication preferences
+	srv.GET("/:version/authentication/preference", srv.withAuth(srv.getClusterAuthenticationPreference))
+	srv.POST("/:version/authentication/preference", srv.withAuth(srv.setClusterAuthenticationPreference))
 
 	// Provisioning tokens
 	srv.GET("/:version/tokens", srv.withAuth(srv.getTokens))
