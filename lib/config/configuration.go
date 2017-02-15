@@ -141,13 +141,6 @@ func ApplyFileConfig(fc *FileConfig, cfg *service.Config) error {
 	cfg.ApplyToken(fc.AuthToken)
 	cfg.Auth.DomainName = fc.Auth.DomainName
 
-	// U2F (universal 2nd factor auth) configuration:
-	u2f, err := fc.Auth.U2F.Parse()
-	if err != nil {
-		return trace.Wrap(err)
-	}
-	cfg.Auth.U2F = *u2f
-
 	if fc.Global.DataDir != "" {
 		cfg.DataDir = fc.Global.DataDir
 		cfg.Auth.StorageConfig.Params["path"] = cfg.DataDir
@@ -229,15 +222,6 @@ func ApplyFileConfig(fc *FileConfig, cfg *service.Config) error {
 		cfg.ReverseTunnels = append(cfg.ReverseTunnels, tun)
 	}
 
-	// add oidc connectors supplied from configs
-	for _, c := range fc.Auth.OIDCConnectors {
-		conn, err := c.Parse()
-		if err != nil {
-			return trace.Wrap(err)
-		}
-		cfg.OIDCConnectors = append(cfg.OIDCConnectors, conn)
-	}
-
 	// apply "proxy_service" section
 	if fc.Proxy.ListenAddress != "" {
 		addr, err := utils.ParseHostPortAddr(fc.Proxy.ListenAddress, int(defaults.SSHProxyListenPort))
@@ -271,6 +255,22 @@ func ApplyFileConfig(fc *FileConfig, cfg *service.Config) error {
 			return trace.Errorf("https cert does not exist: %s", fc.Proxy.CertFile)
 		}
 		cfg.Proxy.TLSCert = fc.Proxy.CertFile
+	}
+
+	// Deprecated: Use U2F section in Authentication section instead.
+	u2f, err := fc.Auth.U2F.Parse()
+	if err != nil {
+		return trace.Wrap(err)
+	}
+	cfg.Auth.U2F = *u2f
+
+	// Deprecated: Use OIDC section in Authentication section instead.
+	for _, c := range fc.Auth.OIDCConnectors {
+		conn, err := c.Parse()
+		if err != nil {
+			return trace.Wrap(err)
+		}
+		cfg.OIDCConnectors = append(cfg.OIDCConnectors, conn)
 	}
 
 	// apply "auth_service" section

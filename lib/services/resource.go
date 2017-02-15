@@ -74,6 +74,12 @@ const (
 	// KindOIDCConnector is a OIDC connector resource
 	KindOIDCConnector = "oidc"
 
+	// KindClusterAuthPreference is the type of authentication for this cluster.
+	KindClusterAuthPreference = "cluster_auth_prerference"
+
+	// KindClusterAuthPreference is the type of authentication for this cluster.
+	MetaNameClusterAuthPreference = "cluster-auth-prerference"
+
 	// V2 is our current version
 	V2 = "v2"
 

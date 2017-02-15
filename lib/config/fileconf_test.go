@@ -44,7 +44,8 @@ func (s *FileTestSuite) TestAuthenticationSection(c *check.C) {
 	}{
 		// 0 - local with otp
 		{
-			`auth_service:
+			`
+             auth_service:
                 authentication:
                   type: local
                   second_factor: otp`,
@@ -55,7 +56,8 @@ func (s *FileTestSuite) TestAuthenticationSection(c *check.C) {
 		},
 		// 1 - local auth without otp
 		{
-			`auth_service:
+			`
+             auth_service:
                 authentication:
                     type: local
                     second_factor: off`,
@@ -66,7 +68,8 @@ func (s *FileTestSuite) TestAuthenticationSection(c *check.C) {
 		},
 		// 2 - local auth with u2f
 		{
-			`auth_service:
+			`
+             auth_service:
                 authentication:
                     type: local
                     second_factor: u2f
@@ -87,7 +90,8 @@ func (s *FileTestSuite) TestAuthenticationSection(c *check.C) {
 		},
 		// 3 - oidc without second factor
 		{
-			`auth_service:
+			`
+             auth_service:
                authentication:
                  type: oidc
                  oidc:
@@ -131,7 +135,8 @@ func (s *FileTestSuite) TestAuthenticationSection(c *check.C) {
 		},
 		// 4 - ldap with second factor
 		{
-			`auth_service:
+			`
+             auth_service:
               authentication:
                 type: ldap
                 second_factor: otp
